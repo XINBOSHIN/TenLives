@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'com.saikonohack'
-version = '4.1-SNAPSHOT'
+version = '4.2-SNAPSHOT'
 
 repositories {
     mavenCentral()
