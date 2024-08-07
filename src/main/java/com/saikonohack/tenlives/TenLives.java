@@ -5,8 +5,6 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.ConsoleCommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.minecart.StorageMinecart;
 import org.bukkit.event.EventHandler;
@@ -15,15 +13,13 @@ import org.bukkit.event.entity.EntityResurrectEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.event.world.LootGenerateEvent;
-import org.bukkit.event.inventory.InventoryOpenEvent;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.loot.LootTables;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bstats.bukkit.Metrics;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
 import java.util.Random;
@@ -33,13 +29,42 @@ public final class TenLives extends JavaPlugin implements Listener {
 
     private final Set<Location> processedChests = new HashSet<>();
     private String deathAction;
+    private String deathMessage;
+    private String totemName;
+    private int totemCustomModelData;
+    private String lifeLostTitle;
+    private String lifeLostSubtitle;
+    private String lifeRestoredTitle;
+    private String lifeRestoredSubtitle;
+    private String totemReceivedMessage;
+    private String commandPlayerOnlyMessage;
+    private String noPermissionMessage;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         deathAction = getConfig().getString("death_action", "spectator");
+        deathMessage = ChatColor.translateAlternateColorCodes('&', getConfig().getString("death_message", "&cВаши жизни закончились..."));
+        totemName = ChatColor.translateAlternateColorCodes('&', getConfig().getString("totem_name", "&6Тотем Жизни"));
+        totemCustomModelData = getConfig().getInt("totem_custom_model_data", 993);
+        lifeLostTitle = ChatColor.translateAlternateColorCodes('&', getConfig().getString("life_lost_title", "&cВы потеряли жизнь"));
+        lifeLostSubtitle = ChatColor.translateAlternateColorCodes('&', getConfig().getString("life_lost_subtitle", "&eБудь внимательнее, они не вечны"));
+        lifeRestoredTitle = ChatColor.translateAlternateColorCodes('&', getConfig().getString("life_restored_title", "&a1 Жизнь восстановлена"));
+        lifeRestoredSubtitle = ChatColor.translateAlternateColorCodes('&', getConfig().getString("life_restored_subtitle", "&eПотрать её с умом"));
+        totemReceivedMessage = ChatColor.translateAlternateColorCodes('&', getConfig().getString("totem_received_message", "&aВы получили Тотем Жизни!"));
+        commandPlayerOnlyMessage = ChatColor.translateAlternateColorCodes('&', getConfig().getString("command_player_only", "&cЭту команду может использовать только игрок."));
+        noPermissionMessage = ChatColor.translateAlternateColorCodes('&', getConfig().getString("no_permission_message", "&cУ вас нет прав на использование этой команды."));
+
         Bukkit.getPluginManager().registerEvents(this, this);
         getLogger().info("TenLives plugin enabled!");
+
+        // Register the placeholder expansion
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new LivesPlaceholder(this).register();
+        }
+
+        int pluginId = 22916;
+        new Metrics(this, pluginId);
     }
 
     @Override
@@ -56,8 +81,8 @@ public final class TenLives extends JavaPlugin implements Listener {
             double newMaxHealth = maxHealth.getBaseValue() - 2.0;
             if (newMaxHealth < 1.0) {
                 if ("ban".equalsIgnoreCase(deathAction)) {
-                    player.kickPlayer("Ваши жизни закончились...");
-                    Bukkit.getBanList(BanList.Type.NAME).addBan(player.getName(), "Ваши жизни закончились...", null, null);
+                    player.kickPlayer(deathMessage);
+                    Bukkit.getBanList(BanList.Type.NAME).addBan(player.getName(), deathMessage, null, null);
                 } else if ("spectator".equalsIgnoreCase(deathAction)) {
                     player.setGameMode(GameMode.SPECTATOR);
                 }
@@ -73,15 +98,14 @@ public final class TenLives extends JavaPlugin implements Listener {
 
         Bukkit.getScheduler().runTaskLater(this, () -> {
             player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 100, 1));
-            player.sendTitle("§cВы потеряли жизнь", "§eБудь внимательнее, они не вечны", 10, 70, 20);
+            player.sendTitle(lifeLostTitle, lifeLostSubtitle, 10, 70, 20);
             player.playSound(player.getLocation(), Sound.BLOCK_END_PORTAL_SPAWN, 1.0f, 1.0f);
         }, 1L);
     }
 
     @EventHandler
     public void onEntityResurrect(EntityResurrectEvent event) {
-        if (event.getEntity() instanceof Player) {
-            Player player = (Player) event.getEntity();
+        if (event.getEntity() instanceof Player player) {
             ItemStack itemInMainHand = player.getInventory().getItemInMainHand();
             ItemStack itemInOffHand = player.getInventory().getItemInOffHand();
 
@@ -93,7 +117,8 @@ public final class TenLives extends JavaPlugin implements Listener {
                         newMaxHealth = 20.0;
                     }
                     maxHealth.setBaseValue(newMaxHealth);
-                    player.sendTitle("§a1 Жизнь восстановлена", "§eПотрать её с умом", 10, 70, 20);
+                    player.sendTitle(lifeRestoredTitle, lifeRestoredSubtitle, 10, 70, 20);
+                    player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
                 }
             }
         }
@@ -101,8 +126,7 @@ public final class TenLives extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
-        if (event.getRightClicked() instanceof StorageMinecart) {
-            StorageMinecart minecart = (StorageMinecart) event.getRightClicked();
+        if (event.getRightClicked() instanceof StorageMinecart minecart) {
             Location loc = minecart.getLocation();
 
             if (processedChests.contains(loc)) {
@@ -114,27 +138,27 @@ public final class TenLives extends JavaPlugin implements Listener {
             if (random.nextDouble() < 0.1) {
                 ItemStack totem = createCustomTotem();
                 minecart.getInventory().addItem(totem);
-//                getLogger().info("Тотем Жизни сгенерировался в вагонетке с сундуком!");
             }
-//            else {
-//                getLogger().info("Тотем Жизни не сгенерировался в вагонетке с сундуком.");
-//            }
         }
     }
 
-
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, Command command, @NotNull String label, String[] args) {
         if (command.getName().equalsIgnoreCase("gettotem")) {
-            if (sender instanceof Player) {
-                Player player = (Player) sender;
-                ItemStack totem = createCustomTotem();
-                player.getInventory().addItem(totem);
-                player.sendMessage("Вы получили Тотем Жизни!");
+            if (!(sender instanceof Player player)) {
+                sender.sendMessage(commandPlayerOnlyMessage);
                 return true;
-            } else if (sender instanceof ConsoleCommandSender) {
-                sender.sendMessage("Эту команду может использовать только игрок.");
             }
+
+            if (!player.hasPermission("tenlives.gettotem")) {
+                player.sendMessage(noPermissionMessage);
+                return true;
+            }
+
+            ItemStack totem = createCustomTotem();
+            player.getInventory().addItem(totem);
+            player.sendMessage(totemReceivedMessage);
+            return true;
         }
         return false;
     }
@@ -142,8 +166,8 @@ public final class TenLives extends JavaPlugin implements Listener {
     private ItemStack createCustomTotem() {
         ItemStack totem = new ItemStack(Material.TOTEM_OF_UNDYING);
         ItemMeta meta = totem.getItemMeta();
-        meta.setDisplayName("§6Тотем Жизни");
-        meta.setCustomModelData(993);
+        meta.setDisplayName(totemName);
+        meta.setCustomModelData(totemCustomModelData);
         totem.setItemMeta(meta);
         return totem;
     }
@@ -151,7 +175,7 @@ public final class TenLives extends JavaPlugin implements Listener {
     private boolean isValidTotem(ItemStack item) {
         if (item != null && item.getType() == Material.TOTEM_OF_UNDYING && item.hasItemMeta()) {
             ItemMeta meta = item.getItemMeta();
-            return meta.hasCustomModelData() && meta.getCustomModelData() == 993;
+            return meta.hasCustomModelData() && meta.getCustomModelData() == totemCustomModelData;
         }
         return false;
     }

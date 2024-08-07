@@ -1,1 +1,11 @@
-death_action: spectator
+death_action: "spectator" #spectator or ban
+death_message: "&cВаши жизни закончились..."
+totem_name: "&6Тотем Жизни"
+totem_custom_model_data: 993
+life_lost_title: "&cВы потеряли жизнь"
+life_lost_subtitle: "&eБудь внимательнее, они не вечны"
+life_restored_title: "&a1 Жизнь восстановлена"
+life_restored_subtitle: "&eПотрать её с умом"
+totem_received_message: "&aВы получили Тотем Жизни!"
+command_player_only: "&cЭту команду может использовать только игрок."
+no_permission_message: "&cУ вас нет прав на использование этой команды."
