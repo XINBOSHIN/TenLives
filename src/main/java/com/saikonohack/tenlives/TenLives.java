@@ -145,23 +145,43 @@ public final class TenLives extends JavaPlugin implements Listener {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, Command command, @NotNull String label, String[] args) {
         if (command.getName().equalsIgnoreCase("gettotem")) {
-            if (!(sender instanceof Player player)) {
+            Player targetPlayer = null;
+
+            if (args.length > 0) {
+                targetPlayer = Bukkit.getPlayer(args[0]);
+                if (targetPlayer == null) {
+                    sender.sendMessage(ChatColor.RED + "Player not found.");
+                    return true;
+                }
+            } else if (sender instanceof Player) {
+                targetPlayer = (Player) sender;
+            } else {
                 sender.sendMessage(commandPlayerOnlyMessage);
                 return true;
             }
 
-            if (!player.hasPermission("tenlives.gettotem")) {
-                player.sendMessage(noPermissionMessage);
+            if (sender instanceof Player) {
+                Player player = (Player) sender;
+                if (!player.hasPermission("tenlives.gettotem")) {
+                    player.sendMessage(noPermissionMessage);
+                    return true;
+                }
+            } else if (!sender.hasPermission("tenlives.gettotem.others")) {
+                sender.sendMessage(noPermissionMessage);
                 return true;
             }
 
             ItemStack totem = createCustomTotem();
-            player.getInventory().addItem(totem);
-            player.sendMessage(totemReceivedMessage);
+            targetPlayer.getInventory().addItem(totem);
+            targetPlayer.sendMessage(totemReceivedMessage);
+            if (sender != targetPlayer) {
+                sender.sendMessage(ChatColor.GREEN + "Totem given to " + targetPlayer.getName());
+            }
             return true;
         }
         return false;
     }
+
 
     private ItemStack createCustomTotem() {
         ItemStack totem = new ItemStack(Material.TOTEM_OF_UNDYING);

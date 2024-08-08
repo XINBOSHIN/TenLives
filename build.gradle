@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'com.saikonohack'
-version = '7.0-RELEASE(1.21)'
+version = '7.0-RELEASE(1.20-1.21)'
 
 repositories {
     mavenCentral()
@@ -24,6 +24,7 @@ repositories {
 
 dependencies {
     compileOnly "io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT"
+    compileOnly "io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT"
     compileOnly 'me.clip:placeholderapi:2.11.6'
     implementation 'org.bstats:bstats-bukkit:3.0.2'
 }
