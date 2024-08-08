@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'com.saikonohack'
-version = '8.0-RELEASE'
+version = '8.1-RELEASE'
 
 repositories {
     mavenCentral()

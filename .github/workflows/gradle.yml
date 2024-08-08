@@ -35,7 +35,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Сборка с Gradle
-        run: ./gradlew build
+        run: ./gradlew shadowJar
 
       - name: Проверка наличия JAR файла
         run: ls -la build/libs
@@ -43,7 +43,7 @@ jobs:
       - name: Найти JAR файл
         id: find_jar
         run: |
-          JAR_FILE=$(ls build/libs/*.jar | head -n 1)
+          JAR_FILE=$(ls build/libs/*-all.jar | head -n 1)
           echo "JAR_FILE=$JAR_FILE" >> $GITHUB_ENV
 
       - name: Извлечение названия проекта и версии
