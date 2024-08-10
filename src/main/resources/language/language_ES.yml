@@ -1,0 +1,12 @@
+language: "ru" #In this field you can select your language. For example: ru, en, es and others.
+death_action: "spectator" #Value: "spectator" or "ban"
+death_message: "&tus vidas han terminado..."
+totem_name: "&6tema de la Vida"
+totem_custom_model_data: 993
+life_lost_title: "&chemos perdido la vida"
+life_lost_subtitle: "&ecuidado, no son eternos"
+life_restored_title: "&a1 vida restaurada"
+life_restored_subtitle: "&aPásala sabiamente"
+totem_received_message: "&a¡los AVAs tienen el tótem de la Vida!"
+command_player_only: "&cSetu comando sólo puede ser utilizado por el jugador."
+no_permission_message: "&cno tiene permiso para usar este comando."

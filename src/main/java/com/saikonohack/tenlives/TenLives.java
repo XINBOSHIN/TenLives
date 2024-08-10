@@ -1,10 +1,15 @@
 package com.saikonohack.tenlives;
 
-import org.bukkit.*;
+import org.bstats.bukkit.Metrics;
+import org.bukkit.BanList;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.minecart.StorageMinecart;
 import org.bukkit.event.EventHandler;
@@ -18,9 +23,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bstats.bukkit.Metrics;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
@@ -40,20 +45,24 @@ public final class TenLives extends JavaPlugin implements Listener {
     private String commandPlayerOnlyMessage;
     private String noPermissionMessage;
 
-    @Override
-    public void onEnable() {
+
+    public void loadLanguage(String lang) {
+        FileConfiguration languageConfig = YamlConfiguration.loadConfiguration(new File(getDataFolder(), "language_" + lang + ".yml"));
+        // Логика работы Language
         saveDefaultConfig();
+        loadLanguage(getConfig().getString("language", "ru"));
+
         deathAction = getConfig().getString("death_action", "spectator");
-        deathMessage = ChatColor.translateAlternateColorCodes('&', getConfig().getString("death_message", "&cВаши жизни закончились..."));
-        totemName = ChatColor.translateAlternateColorCodes('&', getConfig().getString("totem_name", "&6Тотем Жизни"));
+        deathMessage = languageConfig.getString("death_message", "&cВаши жизни закончились...");
+        totemName = languageConfig.getString("totem_name", "&6Тотем Жизни");
         totemCustomModelData = getConfig().getInt("totem_custom_model_data", 993);
-        lifeLostTitle = ChatColor.translateAlternateColorCodes('&', getConfig().getString("life_lost_title", "&cВы потеряли жизнь"));
-        lifeLostSubtitle = ChatColor.translateAlternateColorCodes('&', getConfig().getString("life_lost_subtitle", "&eБудь внимательнее, они не вечны"));
-        lifeRestoredTitle = ChatColor.translateAlternateColorCodes('&', getConfig().getString("life_restored_title", "&a1 Жизнь восстановлена"));
-        lifeRestoredSubtitle = ChatColor.translateAlternateColorCodes('&', getConfig().getString("life_restored_subtitle", "&eПотрать её с умом"));
-        totemReceivedMessage = ChatColor.translateAlternateColorCodes('&', getConfig().getString("totem_received_message", "&aВы получили Тотем Жизни!"));
-        commandPlayerOnlyMessage = ChatColor.translateAlternateColorCodes('&', getConfig().getString("command_player_only", "&cЭту команду может использовать только игрок."));
-        noPermissionMessage = ChatColor.translateAlternateColorCodes('&', getConfig().getString("no_permission_message", "&cУ вас нет прав на использование этой команды."));
+        lifeLostTitle = languageConfig.getString("life_lost_title", "&cВы потеряли жизнь");
+        lifeLostSubtitle = languageConfig.getString("life_lost_subtitle", "&eБудь внимательнее, они не вечны");
+        lifeRestoredTitle = languageConfig.getString("life_restored_title", "&a1 Жизнь восстановлена");
+        lifeRestoredSubtitle = languageConfig.getString("life_restored_subtitle", "&eПотрать её с умом");
+        totemReceivedMessage = languageConfig.getString("totem_received_message", "&aВы получили Тотем Жизни!");
+        commandPlayerOnlyMessage = languageConfig.getString("command_player_only", "&cЭту команду может использовать только игрок.");
+        noPermissionMessage = languageConfig.getString("no_permission_message", "&cУ вас нет прав на использование этой команды.");
 
         Bukkit.getPluginManager().registerEvents(this, this);
         getLogger().info("TenLives plugin enabled!");
