@@ -5,6 +5,7 @@
 # ███████║██║  ██║██║██║  ██╗╚██████╔╝██║ ╚████║╚██████╔╝██║  ██║██║  ██║╚██████╗██║  ██╗
 # ╚══════╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
 
+language: "ru_RU" # In this field you can select your language. For example: ru_RU, en_EN and others.
 death_action: "spectator" #Value: "spectator" or "ban"
 death_message: "&cВаши жизни закончились..."
 totem_name: "&6Тотем Жизни"
